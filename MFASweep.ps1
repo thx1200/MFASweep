@@ -6,7 +6,7 @@ Function Invoke-MFASweep{
   
     This script attempts to login to various Microsoft services using a provided set of credentials. It will attempt to identify where authentication was successful and in some cases where MFA is enabled. WARNING: It is very possible (and easy) to lock an account out with this tool. Make sure you are using a valid set of credentials to avoid lockouts.
 
-    Author: Beau Bullock (@dafthack)
+    Original Author: Beau Bullock (@dafthack)
     License: MIT
     Required Dependencies: None
     Optional Dependencies: None
@@ -14,11 +14,8 @@ Function Invoke-MFASweep{
     .DESCRIPTION
     This script attempts to login to various Microsoft services using a provided set of credentials. It will attempt to identify where authentication was successful and in some cases where MFA is enabled. By default this script will attempt to login to the Microsoft Graph API, Azure Service Management API, Microsoft 365 Exchange Web Services, Microsoft 365 Web Portal with both desktop and mobile user agents, and Microsoft 365 Active Sync. It also has an additional check for ADFS configurations and can attempt to login to the on-prem ADFS server if detected.
       
-    .PARAMETER Username
-    Email Address to use during Authentication
-
-    .PARAMETER Password
-    The password for the account you want to authenticate with
+    .PARAMETER Credential
+    PSCredential which should have email/UPN + password
 
     .PARAMETER Recon
     When the Recon flag is set the script will attempt to locate ADFS configurations
@@ -47,14 +44,10 @@ Function Invoke-MFASweep{
 
 
     Param(
-    [Parameter(Position = 0, Mandatory = $True)]
-    [string]
-    $Username = "",
+    [Parameter(Position = 0, Mandatory = $False)]
+    [PSCredential]
+    $Credential = $null,
 
-    [Parameter(Position = 1, Mandatory = $True)]
-    [system.URI]
-    $Password = "",
-    
     [Parameter(Position = 2, Mandatory = $False)]
     [Switch]
     $Recon,
@@ -68,6 +61,13 @@ Function Invoke-MFASweep{
     $WriteTokens
     
     )
+
+    if ($Credential -eq $null) {
+        $Credential = Get-Credential
+    }
+
+    $Username = $Credential.UserName
+    $Password = $Credential.GetNetworkCredential().Password
 
     Write-Host "---------------- MFASweep ----------------"
     $Tab = [char]9
